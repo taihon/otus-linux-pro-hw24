@@ -1,0 +1,71 @@
+---
+
+
+- name: Install required packages
+  ansible.builtin.yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - epel-release
+    - ipa-server
+    - ipa-server-dns
+    - ipa-client
+    - ipa-common
+    - ipa-client-common
+    - ipa-server-common
+- name: Update nss
+  ansible.builtin.yum:
+    name: nss
+    state: latest
+  changed_when: false
+- name: Configure FreeIPA
+  ansible.builtin.command: |
+      ipa-server-install -U \
+      -r "{{ipaserver_realm}}" \
+      -n "{{ipaserver_domain}}" \
+      -p "{{ipadm_password}}" \
+      -a "{{ipaadmin_password}}" \
+      --hostname="{{ipaserver_hostname}}" \
+      --ip-address="{{ansible_host}}" \
+      --mkhomedir \
+      --setup-dns \
+      --auto-forwarders \
+      --auto-reverse
+  args:
+    creates: /var/log/ipa_provisioned.flag
+- name: Touch flag to prevent provision
+  ansible.builtin.file:
+    path: /var/log/ipa_provisioned.flag
+    state: touch
+  changed_when: false
+- name: Create test user
+  community.general.ipa_user:
+    name: otustest
+    state: present
+    givenname: Otus
+    sn: Otus
+    ipa_host: ipa.otus.lan
+    ipa_user: admin
+    ipa_pass: "{{ipaadmin_password}}"
+    password: otusotus!23
+    update_password: on_create
+- name: Enable firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+- name: Allow FreeIPA traffic
+  ansible.builtin.firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items:
+    - ntp
+    - http
+    - https
+    - ldap
+    - ldaps
+    - kerberos
+    - kpasswd
+    - dns

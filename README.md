@@ -1,4 +1,4 @@
-## OTUS Administrator Linux. Professional ДЗ №23: Сетевые пакеты. VLAN'ы. LACP
+## OTUS Administrator Linux. Professional ДЗ №24: LDAP. Централизованная авторизация и аутентификация 
 
 **Задание**
 
@@ -13,3 +13,10 @@ https://docs.google.com/document/d/1HoZBcvitZ4A9t-y6sbLEbzKmf4CWvb39/edit?usp=sh
 Формат сдачи: Vagrantfile + ansible
 
 **_Решение_**
+
+Провижн сделан при помощи vagrant+ansible. 
+
+FreeIPA поднят. Создан пользователь otustest. Firewalld включён. 
+
+
+Поднимать стенд командой vagrant up, затем ansible-playbook playbook.yml

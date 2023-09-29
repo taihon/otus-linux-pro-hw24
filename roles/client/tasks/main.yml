@@ -1,0 +1,34 @@
+---
+- name: Install required packages
+  ansible.builtin.yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - epel-release
+    - ipa-client
+    - ipa-client-common
+- name: Update nss
+  ansible.builtin.yum:
+    name: nss
+    state: latest
+- name: Set FreeIPA as dns server
+  ansible.builtin.copy:
+    src: resolv.conf
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: 0644
+- name: Configure ipa-client
+  ansible.builtin.command:
+    creates: /var/ipaclient_provisioned.flag
+    cmd: ipa-client-install -U --principal=admin@OTUS.LAN --password="{{ipaadmin_password}}" --server="{{ipaserver_hostname}}" --domain="{{ipaserver_domain}}" --realm="{{ipaserver_realm}}" --mkhomedir --force-join 
+- name: Touch flag to prevent provision
+  ansible.builtin.file:
+    path: /var/log/ipa_provisioned.flag
+    state: touch
+  changed_when: false
+- name: Firewalld start
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: yes
